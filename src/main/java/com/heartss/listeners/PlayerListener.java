@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.ItemFrame;
@@ -70,7 +71,17 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityDamageByEntity(org.bukkit.event.entity.EntityDamageByEntityEvent event) {
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        // First check EnderCrystal damage (it doesn't require a player attacker)
+        if (event.getDamager() instanceof EnderCrystal) {
+            if (plugin.getConfigManager().getConfig("config.yml").getBoolean("vanilla-preventions.prevent-crystal-pvp", false)) {
+                if (event.getEntity() instanceof Player) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+
         if (!(event.getEntity() instanceof Player)) return;
         Player victim = (Player) event.getEntity();
         
@@ -87,6 +98,25 @@ public class PlayerListener implements Listener {
         if (attacker == null) return;
         if (attacker.getUniqueId().equals(victim.getUniqueId())) return;
         
+        // Check Doomsday Sword hits
+        ItemStack weapon = attacker.getInventory().getItemInMainHand();
+        if (weapon != null && weapon.getType() == Material.NETHERITE_SWORD && attacker.hasPermission("heartss.admin.doomsday")) {
+            FileConfiguration itemsYml = plugin.getConfigManager().getConfig("items.yml");
+            if (isCustomItem(weapon, "doomsday-sword", itemsYml)) {
+                
+                event.setCancelled(true); // Bypass normal damage calculations
+                
+                // Instantly drain victim hearts
+                int minHearts = plugin.getConfigManager().getConfig("config.yml").getInt("hearts.min-hearts", 0);
+                plugin.getHeartManager().setHearts(victim.getUniqueId(), minHearts);
+                
+                // Force complete permanent ban elimination
+                plugin.getEliminationManager().checkElimination(victim);
+                return;
+            }
+        }
+
+        // Grace period checks
         FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
         if (!config.getBoolean("grace-period.enabled", true)) return;
         if (!config.getBoolean("grace-period.protect-from-pvp", true)) return;
@@ -145,6 +175,10 @@ public class PlayerListener implements Listener {
 
         if (killer != null && killer.getUniqueId() != victim.getUniqueId()) {
             // PvP DEATH FLOW
+            if (!config.getBoolean("hearts.lose-heart-on-pvp-death", true)) {
+                return; // PvP heart loss disabled, bypass entirely
+            }
+
             boolean eligible = plugin.getExploitManager().checkKillEligibility(killer, victim);
             
             // Deduct heart from victim
@@ -181,6 +215,10 @@ public class PlayerListener implements Listener {
                         "%amount%", String.valueOf(reward)
                 ));
                 Bukkit.broadcastMessage(killMsg);
+
+                plugin.getDiscordWebhookManager().sendDeathWebhook(victim, killer, lossOnDeath, reward);
+            } else {
+                plugin.getDiscordWebhookManager().sendDeathWebhook(victim, killer, lossOnDeath, 0);
             }
 
             if (isEliminated) {
@@ -188,6 +226,10 @@ public class PlayerListener implements Listener {
             }
         } else {
             // NATURAL / ENVIRONMENTAL DEATH FLOW
+            if (!config.getBoolean("hearts.lose-heart-on-natural-death", true)) {
+                return; // Natural/environmental heart loss disabled, bypass entirely
+            }
+
             int currentVictimHearts = victimData.hearts - lossOnDeath;
             plugin.getHeartManager().setHearts(victim.getUniqueId(), currentVictimHearts);
 
@@ -204,6 +246,8 @@ public class PlayerListener implements Listener {
                     "%amount%", String.valueOf(lossOnDeath)
             ));
             Bukkit.broadcastMessage(deathMsg);
+
+            plugin.getDiscordWebhookManager().sendDeathWebhook(victim, null, lossOnDeath, 0);
 
             if (isEliminated) {
                 plugin.getEliminationManager().checkElimination(victim);
@@ -228,6 +272,98 @@ public class PlayerListener implements Listener {
         return com.heartss.api.HeartssAddonAPI.getInstance().getCustomItem(tierKey);
     }
 
+    private String stripAllColor(String text) {
+        if (text == null) return "";
+        String result = text.replace("§", "&");
+        result = result.replaceAll("(?i)&[xX](&[0-9a-fA-F]){6}", "");
+        result = result.replaceAll("(?i)&[0-9a-fA-Fk-oK-OrR]", "");
+        result = result.replaceAll("(?i)&#[0-9a-fA-F]{6}", "");
+        return result.trim();
+    }
+
+    private void consumeOneItem(Player player, ItemStack item, PlayerInteractEvent event) {
+        if (item == null) return;
+        int newAmount = item.getAmount() - 1;
+        
+        boolean isOffhand = false;
+        try {
+            if (event.getHand() == org.bukkit.inventory.EquipmentSlot.OFF_HAND) {
+                isOffhand = true;
+            }
+        } catch (Throwable ignored) {}
+
+        if (isOffhand) {
+            if (newAmount <= 0) {
+                player.getInventory().setItemInOffHand(null);
+            } else {
+                item.setAmount(newAmount);
+            }
+        } else {
+            if (newAmount <= 0) {
+                player.getInventory().setItemInMainHand(null);
+            } else {
+                item.setAmount(newAmount);
+            }
+        }
+        player.updateInventory();
+    }
+
+    private boolean isCustomItem(ItemStack item, String itemId, FileConfiguration config) {
+        if (item == null || item.getType() == Material.AIR || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        
+        // 1. Try PersistentDataContainer match (absolute precision)
+        try {
+            org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "custom-item");
+            if (meta.getPersistentDataContainer().has(key, org.bukkit.persistence.PersistentDataType.STRING)) {
+                String taggedId = meta.getPersistentDataContainer().get(key, org.bukkit.persistence.PersistentDataType.STRING);
+                if (itemId.equalsIgnoreCase(taggedId)) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {}
+        
+        // 2. Resolve config path
+        String path = "items." + itemId;
+        if (!config.contains(path)) {
+            path = "items.scrolls." + itemId;
+        }
+        if (!config.contains(path)) {
+            return false;
+        }
+        
+        // 3. Try DisplayName match
+        if (meta.hasDisplayName()) {
+            String configDisplayName = config.getString(path + ".display-name", "");
+            String itemDisplayName = meta.getDisplayName();
+            
+            boolean nameMatches = false;
+            String coloredConfig = ConfigManager.color(configDisplayName);
+            if (itemDisplayName.equalsIgnoreCase(coloredConfig)) {
+                nameMatches = true;
+            } else {
+                String plainConfig = stripAllColor(configDisplayName);
+                String plainItem = stripAllColor(itemDisplayName);
+                if (!plainConfig.isEmpty() && plainItem.equalsIgnoreCase(plainConfig)) {
+                    nameMatches = true;
+                }
+            }
+            
+            if (nameMatches) {
+                // Ensure material also matches to prevent exploits (renaming arbitrary items to match display name)
+                String configMatName = config.getString(path + ".material");
+                if (configMatName != null) {
+                    Material configMat = Material.matchMaterial(configMatName);
+                    if (configMat != null && item.getType() == configMat) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
@@ -244,10 +380,7 @@ public class PlayerListener implements Listener {
         for (String key : List.of("heart-I", "heart-II", "heart-III", "heart-IV", "heart-V")) {
             String path = "items." + key;
             if (itemsYml.contains(path)) {
-                String displayName = ConfigManager.color(itemsYml.getString(path + ".display-name"));
-                if (handItem.hasItemMeta() && handItem.getItemMeta().hasDisplayName() &&
-                        handItem.getItemMeta().getDisplayName().equals(displayName)) {
-                    
+                if (isCustomItem(handItem, key, itemsYml)) {
                     event.setCancelled(true);
                     
                     int val = itemsYml.getInt(path + ".value", 1);
@@ -256,14 +389,17 @@ public class PlayerListener implements Listener {
 
                     if (data.hearts >= maxCap) {
                         player.sendMessage(ConfigManager.color("&cYou are already at your maximum heart capacity!"));
+                        player.updateInventory();
                         return;
                     }
 
-                    // Consume item
-                    handItem.setAmount(handItem.getAmount() - 1);
+                    // Consume item safely
+                    consumeOneItem(player, handItem, event);
 
                     // Add hearts
                     plugin.getHeartManager().changeHearts(player.getUniqueId(), val);
+
+                    plugin.getDiscordWebhookManager().sendHeartConsumeWebhook(player, key, val, data.hearts);
 
                     // Trigger sound & visual particle effects
                     player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
@@ -279,12 +415,7 @@ public class PlayerListener implements Listener {
         ConfigurationSection scrollSection = itemsYml.getConfigurationSection("items.scrolls");
         if (scrollSection != null) {
             for (String scrollKey : scrollSection.getKeys(false)) {
-                String path = "items.scrolls." + scrollKey;
-                String displayName = ConfigManager.color(scrollSection.getString(scrollKey + ".display-name"));
-
-                if (handItem.hasItemMeta() && handItem.getItemMeta().hasDisplayName() &&
-                        handItem.getItemMeta().getDisplayName().equals(displayName)) {
-
+                if (isCustomItem(handItem, scrollKey, itemsYml)) {
                     event.setCancelled(true);
 
                     // Check Cooldown
@@ -296,6 +427,7 @@ public class PlayerListener implements Listener {
                         long elapsed = (now - cooldowns.get(scrollKey)) / 1000;
                         if (elapsed < cooldownSec) {
                             player.sendMessage(plugin.getConfigManager().getMessage("scroll-cooldown", lang, Map.of("%seconds%", String.valueOf(cooldownSec - elapsed))));
+                            player.updateInventory();
                             return;
                         }
                     }
@@ -307,6 +439,7 @@ public class PlayerListener implements Listener {
 
                     if (data.hearts - heartCost <= minHearts) {
                         player.sendMessage(ConfigManager.color("&cYour soul is too weak to perform this sacrifice!"));
+                        player.updateInventory();
                         return;
                     }
 
@@ -316,8 +449,8 @@ public class PlayerListener implements Listener {
                     // Apply cooldown
                     cooldowns.put(scrollKey, now);
 
-                    // Consume 1 scroll
-                    handItem.setAmount(handItem.getAmount() - 1);
+                    // Consume 1 scroll safely
+                    consumeOneItem(player, handItem, event);
 
                     // Apply Potion Effects from configuration, format: EFFECT:AMPLIFIER:DURATION
                     List<String> effects = scrollSection.getStringList(scrollKey + ".effects");
@@ -341,9 +474,7 @@ public class PlayerListener implements Listener {
         }
 
         // Match Revive Crystal interaction (double click opens dynamic revive list)
-        String crystalName = ConfigManager.color(itemsYml.getString("items.revive-crystal.display-name"));
-        if (handItem.hasItemMeta() && handItem.getItemMeta().hasDisplayName() &&
-                handItem.getItemMeta().getDisplayName().equals(crystalName)) {
+        if (isCustomItem(handItem, "revive-crystal", itemsYml)) {
             event.setCancelled(true);
             plugin.getMenuManager().openReviveConfirmationMenu(player);
         }
@@ -376,9 +507,7 @@ public class PlayerListener implements Listener {
         ItemStack handItem = event.getItemInHand();
         FileConfiguration itemsYml = plugin.getConfigManager().getConfig("items.yml");
 
-        String beaconDisplayName = ConfigManager.color(itemsYml.getString("items.revive-beacon.display-name"));
-        if (handItem.hasItemMeta() && handItem.getItemMeta().hasDisplayName() &&
-                handItem.getItemMeta().getDisplayName().equals(beaconDisplayName)) {
+        if (isCustomItem(handItem, "revive-beacon", itemsYml)) {
             
             if (!plugin.getConfigManager().getConfig("config.yml").getBoolean("revive.beacon-enabled", true)) {
                 event.setCancelled(true);
@@ -415,57 +544,33 @@ public class PlayerListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof EnderCrystal) {
-            if (plugin.getConfigManager().getConfig("config.yml").getBoolean("vanilla-preventions.prevent-crystal-pvp", false)) {
-                if (event.getEntity() instanceof Player) {
-                    event.setCancelled(true);
-                }
-            }
-        }
 
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
-            Player attacker = (Player) event.getDamager();
-            Player victim = (Player) event.getEntity();
-            ItemStack weapon = attacker.getInventory().getItemInMainHand();
-
-            // Check Doomsday Sword hits
-            if (weapon.getType() == Material.NETHERITE_SWORD && attacker.hasPermission("heartss.admin.doomsday")) {
-                FileConfiguration itemsYml = plugin.getConfigManager().getConfig("items.yml");
-                String doomSwordName = ConfigManager.color(itemsYml.getString("items.doomsday-sword.display-name"));
-
-                if (weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName() &&
-                        weapon.getItemMeta().getDisplayName().equals(doomSwordName)) {
-                    
-                    event.setCancelled(true); // Bypass normal damage calculations
-                    
-                    // Instantly drain victim hearts
-                    int minHearts = plugin.getConfigManager().getConfig("config.yml").getInt("hearts.min-hearts", 0);
-                    plugin.getHeartManager().setHearts(victim.getUniqueId(), minHearts);
-                    
-                    // Force complete permanent ban elimination
-                    plugin.getEliminationManager().checkElimination(victim);
-                }
-            }
-        }
-    }
 
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractAtEntityEvent event) {
         if (event.getRightClicked() instanceof ItemFrame) {
             Player player = event.getPlayer();
-            ItemStack hand = player.getInventory().getItemInMainHand();
+            ItemStack mainHand = player.getInventory().getItemInMainHand();
+            ItemStack offHand = player.getInventory().getItemInOffHand();
             
             if (plugin.getConfigManager().getConfig("config.yml").getBoolean("vanilla-preventions.prevent-custom-items-in-item-frames", true)) {
                 FileConfiguration itemsYml = plugin.getConfigManager().getConfig("items.yml");
-                if (hand.hasItemMeta() && hand.getItemMeta().hasDisplayName()) {
-                    String handName = hand.getItemMeta().getDisplayName();
-                    
-                    // Match items
+                
+                // Check main hand
+                if (mainHand != null && mainHand.getType() != Material.AIR) {
                     for (String key : List.of("heart-I", "heart-II", "heart-III", "heart-IV", "heart-V", "revive-crystal", "revive-beacon", "revive-book")) {
-                        String matchName = ConfigManager.color(itemsYml.getString("items." + key + ".display-name"));
-                        if (handName.equals(matchName)) {
+                        if (isCustomItem(mainHand, key, itemsYml)) {
+                            event.setCancelled(true);
+                            player.sendMessage(ConfigManager.color("&cYou cannot place custom Heartss items in item frames (duplication prevention)."));
+                            return;
+                        }
+                    }
+                }
+                
+                // Check off hand
+                if (offHand != null && offHand.getType() != Material.AIR) {
+                    for (String key : List.of("heart-I", "heart-II", "heart-III", "heart-IV", "heart-V", "revive-crystal", "revive-beacon", "revive-book")) {
+                        if (isCustomItem(offHand, key, itemsYml)) {
                             event.setCancelled(true);
                             player.sendMessage(ConfigManager.color("&cYou cannot place custom Heartss items in item frames (duplication prevention)."));
                             return;
@@ -508,17 +613,7 @@ public class PlayerListener implements Listener {
         for (String recipeKey : recipesYml.getConfigurationSection("recipes").getKeys(false)) {
             String path = "recipes." + recipeKey;
             if (recipesYml.getBoolean(path + ".enabled", true)) {
-                String matchName = "";
-                if (recipeKey.startsWith("heart-")) {
-                    matchName = ConfigManager.color(itemsYml.getString("items." + recipeKey + ".display-name"));
-                } else if (recipeKey.equals("revive-crystal")) {
-                    matchName = ConfigManager.color(itemsYml.getString("items.revive-crystal.display-name"));
-                } else if (recipeKey.equals("revive-beacon")) {
-                    matchName = ConfigManager.color(itemsYml.getString("items.revive-beacon.display-name"));
-                }
-
-                if (result.hasItemMeta() && result.getItemMeta().hasDisplayName() &&
-                        result.getItemMeta().getDisplayName().equals(matchName)) {
+                if (isCustomItem(result, recipeKey, itemsYml)) {
 
                     // Check crafting limits
                     int craftLimit = recipesYml.getInt(path + ".craft-limit", -1);
