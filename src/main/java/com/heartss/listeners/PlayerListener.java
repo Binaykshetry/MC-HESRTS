@@ -10,7 +10,6 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.ItemFrame;
@@ -71,17 +70,7 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        // First check EnderCrystal damage (it doesn't require a player attacker)
-        if (event.getDamager() instanceof EnderCrystal) {
-            if (plugin.getConfigManager().getConfig("config.yml").getBoolean("vanilla-preventions.prevent-crystal-pvp", false)) {
-                if (event.getEntity() instanceof Player) {
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-        }
-
+    public void onEntityDamageByEntity(org.bukkit.event.entity.EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player)) return;
         Player victim = (Player) event.getEntity();
         
@@ -98,28 +87,6 @@ public class PlayerListener implements Listener {
         if (attacker == null) return;
         if (attacker.getUniqueId().equals(victim.getUniqueId())) return;
         
-        // Check Doomsday Sword hits
-        ItemStack weapon = attacker.getInventory().getItemInMainHand();
-        if (weapon != null && weapon.getType() == Material.NETHERITE_SWORD && attacker.hasPermission("heartss.admin.doomsday")) {
-            FileConfiguration itemsYml = plugin.getConfigManager().getConfig("items.yml");
-            String doomSwordName = ConfigManager.color(itemsYml.getString("items.doomsday-sword.display-name"));
-
-            if (weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName() &&
-                    weapon.getItemMeta().getDisplayName().equals(doomSwordName)) {
-                
-                event.setCancelled(true); // Bypass normal damage calculations
-                
-                // Instantly drain victim hearts
-                int minHearts = plugin.getConfigManager().getConfig("config.yml").getInt("hearts.min-hearts", 0);
-                plugin.getHeartManager().setHearts(victim.getUniqueId(), minHearts);
-                
-                // Force complete permanent ban elimination
-                plugin.getEliminationManager().checkElimination(victim);
-                return;
-            }
-        }
-
-        // Grace period checks
         FileConfiguration config = plugin.getConfigManager().getConfig("config.yml");
         if (!config.getBoolean("grace-period.enabled", true)) return;
         if (!config.getBoolean("grace-period.protect-from-pvp", true)) return;
@@ -448,7 +415,41 @@ public class PlayerListener implements Listener {
         }
     }
 
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof EnderCrystal) {
+            if (plugin.getConfigManager().getConfig("config.yml").getBoolean("vanilla-preventions.prevent-crystal-pvp", false)) {
+                if (event.getEntity() instanceof Player) {
+                    event.setCancelled(true);
+                }
+            }
+        }
 
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
+            Player attacker = (Player) event.getDamager();
+            Player victim = (Player) event.getEntity();
+            ItemStack weapon = attacker.getInventory().getItemInMainHand();
+
+            // Check Doomsday Sword hits
+            if (weapon.getType() == Material.NETHERITE_SWORD && attacker.hasPermission("heartss.admin.doomsday")) {
+                FileConfiguration itemsYml = plugin.getConfigManager().getConfig("items.yml");
+                String doomSwordName = ConfigManager.color(itemsYml.getString("items.doomsday-sword.display-name"));
+
+                if (weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName() &&
+                        weapon.getItemMeta().getDisplayName().equals(doomSwordName)) {
+                    
+                    event.setCancelled(true); // Bypass normal damage calculations
+                    
+                    // Instantly drain victim hearts
+                    int minHearts = plugin.getConfigManager().getConfig("config.yml").getInt("hearts.min-hearts", 0);
+                    plugin.getHeartManager().setHearts(victim.getUniqueId(), minHearts);
+                    
+                    // Force complete permanent ban elimination
+                    plugin.getEliminationManager().checkElimination(victim);
+                }
+            }
+        }
+    }
 
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractAtEntityEvent event) {
