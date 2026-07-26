@@ -45,6 +45,7 @@ public class PlayerListener implements Listener {
     private final Map<UUID, Map<String, Long>> scrollCooldowns = new HashMap<>();
 
     public PlayerListener(Heartss plugin) {
+        // Trigger synchronization with GitHub
         this.plugin = plugin;
     }
 
