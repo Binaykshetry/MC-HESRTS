@@ -1,0 +1,83 @@
+# ==============================================================================
+#                               HEARTSS MESSAGES
+# ==============================================================================
+
+# Default active server language (can be overridden per-player if configured)
+default-language: "en"
+
+languages:
+  en:
+    prefix: "&#ff3333&lHeartss &r&8» "
+    no-permission: "&cYou do not have permission to execute this command."
+    player-only: "&cThis command can only be executed by a player."
+    player-not-found: "&cPlayer %player% was not found or is offline."
+    invalid-amount: "&cPlease enter a valid positive integer amount."
+    success-reload: "&aConfiguration, items, recipes, and menus successfully reloaded!"
+    language-changed: "&aYour personal language has been set to English."
+    
+    # Heart status
+    current-hearts: "&7You currently have &#ff3333%hearts% &7hearts (Max: &f%max_hearts%&7)."
+    check-hearts: "&e%player% &7has &#ff3333%hearts% &7hearts (Max: &f%max_hearts%&7)."
+    set-hearts: "&aSuccessfully set %player%'s hearts to &f%amount%&a."
+    set-max-hearts: "&aSuccessfully overrode %player%'s max-heart cap to &f%amount%&a."
+    add-hearts: "&aAdded &f%amount% &ahearts to %player%."
+    remove-hearts: "&aRemoved &f%amount% &ahearts from %player%."
+    
+    # Items & consumption
+    success-redeem: "&a&l+ %amount% Hearts! &7You consumed a Heart item and expanded your vitality."
+    withdraw-success: "&aSuccessfully withdrew &f%amount% &ahearts into a physical item."
+    withdraw-fail-min: "&cYou cannot withdraw. Your hearts would fall below the minimum allowed limit."
+    limit-reached: "&cYou have reached your crafting limit for this item!"
+    scroll-cooldown: "&cThis Sacrificial Scroll is on cooldown for another %seconds%s."
+    scroll-consumed: "&e&lSacrifice Complete! &c-%hearts% Hearts &7for battle enhancement."
+    
+    # Kills & Deaths
+    kill-broadcast: "&#ff3333&lPvP Kill &r&8» &#ff5555%killer% &7slayed &#ff5555%victim% &7and gained &#ff5555+%amount% &7heart(s)!"
+    death-natural: "&#ff3333&lLoss &r&8» &#ff5555%victim% &7died of natural causes and lost &#ff5555-%amount% &7heart."
+    
+    # Elimination
+    elimination-title: "&4&lELIMINATED"
+    elimination-subtitle: "&cYour soul has run out of hearts!"
+    elimination-broadcast: "&8&m-----------------------------------------\n  &4&lELIMINATED! &f%player% &7has hit 0 hearts and was banished!\n&8&m-----------------------------------------"
+    ban-kick-message: "&cYou have been eliminated from this world!\n&7All of your hearts were drained.\n&7Banned for: &e%duration% &7minutes."
+    permanent-ban-kick-message: "&cYou have been PERMANENTLY eliminated!\n&7Your consecutive death count has triggered soul ban."
+    
+    # Revive
+    revive-initiated: "&b&lRitual Activated! &7Place souls at the altar. Type banned player's name in chat to resurrect."
+    revive-ritual-broadcast: "&b&lResurrection Event! &f%player% &7is calling back a lost soul at a Revive Beacon!"
+    player-not-banned: "&cThat player is not currently banned or eliminated."
+    revive-success: "&a&lResurrection Complete! &f%player% &7has been revived back to life!"
+    revive-fail-cost: "&cYou do not have enough hearts (%cost% required) to revive this player."
+    revive-limit-reached: "&cThis player has reached their maximum lifetime revives limit (%limit%)."
+
+  es:
+    prefix: "&#ff3333&lHeartss &r&8» "
+    no-permission: "&cNo tienes permiso para ejecutar este comando."
+    player-only: "&cEste comando solo puede ser ejecutado por un jugador."
+    player-not-found: "&cEl jugador %player% no fue encontrado o está desconectado."
+    invalid-amount: "&cPor favor ingresa una cantidad entera positiva válida."
+    success-reload: "&a¡Configuración, objetos, recetas y menús recargados con éxito!"
+    language-changed: "&aTu idioma personal ha sido cambiado a Español."
+    
+    # Heart status
+    current-hearts: "&7Actualmente tienes &#ff3333%hearts% &7corazones (Máx: &f%max_hearts%&7)."
+    check-hearts: "&e%player% &7tiene &#ff3333%hearts% &7corazones (Máx: &f%max_hearts%&7)."
+    set-hearts: "&aSe establecieron los corazones de %player% en &f%amount%&a."
+    set-max-hearts: "&aSe anuló el límite máximo de corazones de %player% a &f%amount%&a."
+    
+    # Kills & Deaths
+    kill-broadcast: "&#ff3333&lAsesinato &r&8» &#ff5555%killer% &7asesinó a &#ff5555%victim% &7y ganó &#ff5555+%amount% &7corazón(es)!"
+    death-natural: "&#ff3333&lPérdida &r&8» &#ff5555%victim% &7murió por causas naturales y perdió &#ff5555-%amount% &7corazón."
+
+  de:
+    prefix: "&#ff3333&lHeartss &r&8» "
+    no-permission: "&cDu hast keine Berechtigung für diesen Befehl."
+    player-only: "&cDieser Befehl kann nur von einem Spieler ausgeführt werden."
+    player-not-found: "&cSpieler %player% wurde nicht gefunden oder ist offline."
+    invalid-amount: "&cBitte gib eine gültige positive Ganzzahl ein."
+    success-reload: "&aKonfiguration, Items, Rezepte und Menüs erfolgreich neu geladen!"
+    language-changed: "&aDeine Sprache wurde auf Deutsch eingestellt."
+    
+    # Heart status
+    current-hearts: "&7Du hast derzeit &#ff3333%hearts% &7Herzen (Max: &f%max_hearts%&7)."
+    check-hearts: "&e%player% &7hat &#ff3333%hearts% &7Herzen (Max: &f%max_hearts%&7)."

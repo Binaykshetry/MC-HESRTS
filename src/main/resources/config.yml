@@ -1,0 +1,95 @@
+# ==============================================================================
+#                               HEARTSS CONFIGURATION
+# ==============================================================================
+
+# Storage settings
+# Supported backends: YAML, SQLite, MySQL
+storage:
+  backend: "SQLite"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "lifesteal"
+    username: "root"
+    password: ""
+    useSSL: false
+
+# Core Heart System Values
+hearts:
+  min-hearts: 0                      # Floor value a player's hearts can reach (0 or 1, or -1 for grace state)
+  default-hearts: 10                 # Hearts a brand new player spawns with (1 heart = 2 HP)
+  fresh-hearts: 10                   # Hearts assigned when an admin resets/revives a player
+  max-hearts: 20                     # Global hard cap on hearts any player can hold (can be overridden by permission)
+  
+  # Heart Transfer Mode: PHYSICAL or VIRTUAL
+  # PHYSICAL: Drops a heart item upon death for anyone to loot.
+  # VIRTUAL: Instantly adds hearts to the killer's status bar.
+  transfer-mode: "PHYSICAL"
+  
+  # Heart modifiers
+  reward-on-kill: 1                  # Hearts gained per PvP kill
+  loss-on-death: 1                   # Hearts lost per death
+  reward-on-elimination: 2           # Separate, larger reward gained specifically when a kill causes victim elimination
+  
+  # Overflow settings (if killer is already at max-hearts)
+  drop-overflow-as-item: true        # If true, drops physical heart item on the ground when killer has reached max hearts
+
+  # Non-PvP Death Rules
+  # true: On natural death (fall, lava, drown, mobs, void etc), heart is deducted and GONE. No item drops.
+  # false: Heart is deducted and dropped as an item at death location for anyone to pick up.
+  natural-death-removes-only: true
+
+# Ban & Elimination System Settings
+elimination:
+  ban-on-zero-hearts: true           # Master switch to ban players when they reach min-hearts
+  disable-player-ban-on-elimination: false # If true, disables the built-in ban mechanism so external command can ban
+  
+  # Default ban duration in minutes (e.g. 1440 = 24 hours). Use -1 for permanent ban.
+  default-ban-duration: 1440
+  
+  # Escalating Ban Threshold (consecutive eliminations before a permanent ban is enforced)
+  escalating-ban-threshold: 3        # On the 3rd consecutive elimination, player is permanently banned
+  consecutive-reset-hours: 72        # Hours player must survive past revive to reset their consecutive elimination count
+  
+  # Ban matching
+  use-ip-bans: false                 # Ban both UUID and IP address of the eliminated player
+
+# Revive System
+revive:
+  book-enabled: true                 # Allow reviving by using a custom written/enchanted book item
+  crystal-enabled: true              # Allow reviving by using a custom revive crystal item
+  beacon-enabled: true               # Allow placement of a custom Revive Beacon to perform ritual
+  beacon-countdown-seconds: 30       # Countdown duration for revive rituals
+  worldguard-protection-radius: 5    # Auto-protect placed revive beacons in this block radius (requires WorldGuard)
+  max-revives-per-player: -1         # Maximum times any single player can be revived (-1 for unlimited)
+
+# Anti-Exploit / Anti-Grinding Heuristics
+anti-exploit:
+  # Same IP Farming Prevention
+  prevent-same-ip-kills: true        # Suppress heart transfer or item drops if killer and victim share an IP address
+  
+  # Kill Cooldown Prevention
+  repeat-kill-cooldown-seconds: 120  # Cooldown window before a killer can get a heart from killing the same player again
+  
+  # Alt/Smurf Logs
+  track-shared-ip-history: true      # Heuristic tracking of IP connection history to flag potential alt/smurf activity
+  log-detections-to-console: true    # Log flagged/suspected-alt accounts to console and staff chats
+  
+  # Forced Drop Rule
+  forced-drop-for-flagged-alts: true # Flagged alt accounts ALWAYS drop heart on death physically, ignoring natural-death-removes-only
+
+# Disable Vanilla Interactions (Neutralize exploits and combat loops)
+vanilla-preventions:
+  prevent-totems: true               # Block Totem of Undying from saving players from elimination-causing deaths
+  prevent-crystal-pvp: false         # Set to true to disable end-crystal explosion damage to players
+  prevent-respawn-anchors: true      # Block respawn anchor explosions in the Overworld
+  prevent-beds: true                 # Block bed explosions in the Nether and the End
+  prevent-custom-items-in-item-frames: true # Prevent placing hearts, scrolls, and revive items in item frames (prevents dupes)
+
+# Grace Period Settings
+grace-period:
+  enabled: true
+  duration-seconds: 120             # Time in seconds players are protected after first join or revive
+  protect-from-heart-loss: true      # Prevent heart loss on death during grace period
+  protect-from-pvp: true             # Prevent players in grace period from taking PvP damage
+

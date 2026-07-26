@@ -1,0 +1,94 @@
+name: Heartss
+version: 1.0.0
+main: com.heartss.Heartss
+api-version: 1.20
+description: Merged ultimate lifesteal core with physical/virtual modes, custom tiered hearts, and anti-exploit detection.
+author: HeartssDev
+softdepend: [LuckPerms, PlaceholderAPI, WorldGuard, Vault, DeluxeWithdraw, EzCountdown, DeluxeCombat, GSit]
+
+commands:
+  hearts:
+    description: Show your current hearts or open the personal menu.
+    aliases: [heartss, lifesteal]
+    permission: hearts.viewhearts
+  lsrecipe:
+    description: Shorthand alias to open the recipe viewer.
+    aliases: [heartrecipe]
+    permission: hearts.viewrecipes
+  withdraw:
+    description: Withdraw hearts into physical items.
+    permission: hearts.withdraw
+  eliminate:
+    description: Banish and eliminate a player.
+    permission: hearts.admin.eliminate
+  revive:
+    description: Revive an offline/eliminated player.
+    permission: hearts.revive
+  setlife:
+    description: Set the heart count of a player.
+    permission: hearts.admin.setlife
+
+permissions:
+  hearts.admin.reload:
+    description: Allow to reload the plugin config and languages
+    default: op
+  hearts.admin.setlife:
+    description: Allow to set the amount of hearts a player has
+    default: op
+  hearts.admin.giveitem:
+    description: Allow to give custom items to a player
+    default: op
+  hearts.admin.eliminate:
+    description: Allows to eliminate players with the /eliminate command
+    default: op
+  hearts.admin.revive:
+    description: Allow a player to revive another player with the /revive command
+    default: op
+  hearts.bypassrevivelimit:
+    description: Allow a player to bypass the revive limit
+    default: op
+  hearts.bypass:
+    description: Prevent heart loss/drops/rewards on death
+    default: false
+  hearts.bypass.check:
+    description: Check bypass status for yourself and other players
+    default: op
+  hearts.withdraw:
+    description: Allow a player to withdraw hearts
+    default: true
+  hearts.revive:
+    description: Allow a player to revive others with a revive crystal or command
+    default: true
+  hearts.viewrecipes:
+    description: Allow a player to view the custom recipes
+    default: true
+  hearts.help:
+    description: Allow a player to access the help menu
+    default: true
+  hearts.viewhearts:
+    description: Allow a player to view the amount of hearts they have
+    default: true
+  hearts.maxhearts.*:
+    description: Wildcard for setting max hearts
+    default: op
+  hearts.use:
+    description: Base access to the plugin and personal menus.
+    default: true
+  hearts.heart:
+    description: Receive/lose hearts and use heart items.
+    default: true
+  hearts.admin:
+    description: Complete access to all administrative commands.
+    default: op
+  heartss.viewhearts:
+    description: Allowed to view player heart status.
+    default: true
+  heartss.withdraw:
+    description: Allowed to withdraw hearts into item form.
+    default: true
+  heartss.revive:
+    description: Allowed to revive banned players using crystals/beacons/books.
+    default: true
+  heartss.admin.doomsday:
+    description: Allowed to spawn and use the Doomsday Sword.
+    default: op

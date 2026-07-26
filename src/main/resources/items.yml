@@ -1,0 +1,152 @@
+# ==============================================================================
+#                               HEARTSS CUSTOM ITEMS
+# ==============================================================================
+
+# Custom Items Tiers Configuration
+# All display names support standard color codes &H/&.
+# CustomModelData is optional, set to -1 to disable.
+
+items:
+  heart-I:
+    material: "PLAYER_HEAD"
+    texture-base64: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmM4ZmI2MzdkNmUxYTdiYThmYTk3ZWU5ZDI5MTVlODQzZThlYzc5MGQ4YjdiZjYwNDhiZTYyMWVlNGQ1OWZiYSJ9fX0="
+    display-name: "&#ff5555&lHeart Fragment (Tier I)"
+    custom-model-data: 1001
+    value: 1
+    lore:
+      - "&7A glowing fragment of a player's soul."
+      - "&7Consuming this adds &f+1 Max Heart&7."
+      - ""
+      - "&eRight-click to consume!"
+
+  heart-II:
+    material: "PLAYER_HEAD"
+    texture-base64: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTczY2U1NGEzOWY4NDdkOWRhYmU5YjA3NThhYTY1Yzg1OTg2Y2NjN2M0YmFjZWY5NzczYjU2YThmOGU1YTkifX19"
+    display-name: "&#ff4444&lHeart Item (Tier II)"
+    custom-model-data: 1002
+    value: 2
+    lore:
+      - "&7A condensed energy of hearts."
+      - "&7Consuming this adds &f+2 Max Hearts&7."
+      - ""
+      - "&eRight-click to consume!"
+
+  heart-III:
+    material: "PLAYER_HEAD"
+    texture-base64: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmViNjgyNDI5MmM0NDk0NzI5NGJiMThmMWI2Njg1YzY3YTc5YWIyYjc0ZDJlYTlhZDM0YjRiYzFmZWRmIn19fQ=="
+    display-name: "&#ff3333&lVital Heart (Tier III)"
+    custom-model-data: 1003
+    value: 3
+    lore:
+      - "&7Radiates a powerful life force."
+      - "&7Consuming this adds &f+3 Max Hearts&7."
+      - ""
+      - "&eRight-click to consume!"
+
+  heart-IV:
+    material: "PLAYER_HEAD"
+    texture-base64: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTZlOWE3NzA5ODcyZTIwN2VhYTc3MTNlY2I2MTFjYzBjZjc1Mjg1NDM0MmQxMWU3M2M0YzkxZjQ1ZTkifX19"
+    display-name: "&#ff2222&lEnchanted Heart (Tier IV)"
+    custom-model-data: 1004
+    value: 4
+    lore:
+      - "&7Imbued with magical survival energy."
+      - "&7Consuming this adds &f+4 Max Hearts&7."
+      - ""
+      - "&eRight-click to consume!"
+
+  heart-V:
+    material: "PLAYER_HEAD"
+    texture-base64: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjg1YzMyNmI4Y2M1N2RjMTFmODU2ZDE2ZDg1MTU5M2Q3YmRjMTI1MWViN2M4YTcxMTQ0YmVlNjdiNzRjOSJ9fX0="
+    display-name: "&#ff0000&lSoul Bound Heart (Tier V)"
+    custom-model-data: 1005
+    value: 5
+    lore:
+      - "&cThe ultimate manifestation of life power."
+      - "&7Consuming this adds &f+5 Max Hearts&7."
+      - ""
+      - "&eRight-click to consume!"
+
+  # Sacrificial Scrolls: Consume hearts for temporary buffs
+  scrolls:
+    warrior-scroll:
+      material: "PAPER"
+      display-name: "&6&lSacrificial Warrior Scroll"
+      custom-model-data: 2001
+      heart-cost: 2
+      cooldown-seconds: 60
+      effects:
+        - "INCREASE_DAMAGE:1:60"   # Strength II for 60 seconds
+        - "SPEED:0:120"             # Speed I for 120 seconds
+      lore:
+        - "&7Sacrifice your life force for battle."
+        - "&cCost: &f-2 Hearts"
+        - ""
+        - "&7Grants:"
+        - "&8- &eStrength II &8(1 min)"
+        - "&8- &eSpeed I &8(2 mins)"
+        - ""
+        - "&eRight-click to sacrifice!"
+
+    healing-scroll:
+      material: "PAPER"
+      display-name: "&a&lSacrificial Recovery Scroll"
+      custom-model-data: 2002
+      heart-cost: 1
+      cooldown-seconds: 30
+      effects:
+        - "REGENERATION:2:15"       # Regeneration III for 15 seconds
+        - "HEAL:1:0"                # Instant Health II
+      lore:
+        - "&7Sacrifice structure to bind flesh."
+        - "&cCost: &f-1 Heart"
+        - ""
+        - "&7Grants:"
+        - "&8- &eRegeneration III &8(15s)"
+        - "&8- &eInstant Health II"
+        - ""
+        - "&eRight-click to sacrifice!"
+
+  # Revive Items
+  revive-book:
+    material: "WRITTEN_BOOK"
+    display-name: "&d&lTome of Resurrections"
+    custom-model-data: 3001
+    lore:
+      - "&7An ancient script detailing life rituals."
+      - "&7Use `/heartss revive <player>` while holding this"
+      - "&7to bring back an eliminated player."
+      - ""
+      - "&cConsumed upon successful resurrection."
+
+  revive-crystal:
+    material: "AMETHYST_SHARD"
+    display-name: "&d&lResurrection Crystal"
+    custom-model-data: 3002
+    lore:
+      - "&7A crystal capable of capturing a soul."
+      - "&7Use in revive recipes or in the GUI."
+      - ""
+      - "&dDouble right-click to trigger menu."
+
+  revive-beacon:
+    material: "BEACON"
+    display-name: "&b&lAltar of Souls (Revive Beacon)"
+    custom-model-data: 3003
+    lore:
+      - "&7Place on the ground to initiate a ritual."
+      - "&7Will start a &bcountdown &7to summon a player."
+      - ""
+      - "&cHighly vulnerable to attack during warm-up!"
+
+  # Special Admin Moderation Weapon
+  doomsday-sword:
+    material: "NETHERITE_SWORD"
+    display-name: "&4&lDoomsday Reaper"
+    custom-model-data: 666
+    lore:
+      - "&7An extreme moderation item."
+      - "&cInstantly eliminates &7whoever it strikes."
+      - "&cEnforces a permanent soul-ban."
+      - ""
+      - "&8&oAdmin Event Utility"

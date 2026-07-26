@@ -1,0 +1,90 @@
+# ==============================================================================
+#                               HEARTSS RECIPES
+# ==============================================================================
+
+# Custom crafting recipe grid definitions.
+# 'shape' defines the 3x3 layout. Empty spaces can be represented as space (' ').
+# 'ingredients' maps each character in the shape to a Bukkit Material.
+# 'craft-limit' limits how many times each player can craft this item. (-1 for unlimited)
+
+recipes:
+  heart-I:
+    enabled: true
+    craft-limit: -1
+    result-amount: 1
+    shape:
+      - "RDR"
+      - "DGD"
+      - "RDR"
+    ingredients:
+      R: "REDSTONE_BLOCK"
+      D: "DIAMOND"
+      G: "GOLDEN_APPLE"
+
+  heart-II:
+    enabled: true
+    craft-limit: 10
+    result-amount: 1
+    shape:
+      - "DND"
+      - "H1H"
+      - "DND"
+    ingredients:
+      D: "DIAMOND_BLOCK"
+      N: "NETHERITE_INGOT"
+      H1: "CUSTOM:heart-I" # Denotes a custom custom item dependency
+      H: "GOLDEN_APPLE"
+
+  heart-III:
+    enabled: true
+    craft-limit: 5
+    result-amount: 1
+    shape:
+      - "NBN"
+      - "H2H"
+      - "NBN"
+    ingredients:
+      N: "NETHERITE_BLOCK"
+      B: "BEACON"
+      H2: "CUSTOM:heart-II"
+      H: "ENCHANTED_GOLDEN_APPLE"
+
+  revive-crystal:
+    enabled: true
+    craft-limit: -1
+    result-amount: 1
+    shape:
+      - "EAE"
+      - "ADA"
+      - "EAE"
+    ingredients:
+      E: "EMERALD_BLOCK"
+      A: "AMETHYST_SHARD"
+      D: "DIAMOND_BLOCK"
+
+  revive-beacon:
+    enabled: true
+    craft-limit: 2
+    result-amount: 1
+    shape:
+      - "NSN"
+      - "C B"
+      - "NSN"
+    ingredients:
+      N: "NETHERITE_BLOCK"
+      S: "NETHER_STAR"
+      C: "CUSTOM:revive-crystal"
+      B: "BEACON"
+
+  # Optional Enchanted Golden Apple recipe (if server-admins want to allow crafting it)
+  enchanted-golden-apple:
+    enabled: false
+    craft-limit: -1
+    result-amount: 1
+    shape:
+      - "GGG"
+      - "GAG"
+      - "GGG"
+    ingredients:
+      G: "GOLD_BLOCK"
+      A: "APPLE"

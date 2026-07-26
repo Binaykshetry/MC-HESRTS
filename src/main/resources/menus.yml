@@ -1,0 +1,91 @@
+# ==============================================================================
+#                               HEARTSS MENUS
+# ==============================================================================
+
+# Custom GUI layout configs. Size must be a multiple of 9 (9 to 54).
+
+menus:
+  player-menu:
+    title: "&#ff3333&lPersonal Hearts Dashboard"
+    size: 27
+    slots:
+      # Withdraw button
+      11:
+        material: "RED_DYE"
+        display-name: "&#ff5555&lWithdraw Hearts"
+        lore:
+          - "&7Convert your max health into"
+          - "&7a physical heart item to trade."
+          - ""
+          - "&cCost: &f-1 Max Heart"
+          - ""
+          - "&eClick to withdraw 1 heart!"
+      # Recipe viewer button
+      13:
+        material: "BOOK"
+        display-name: "&e&lRecipe Book"
+        lore:
+          - "&7View current crafting recipes"
+          - "&7for custom Hearts and Crystals."
+          - ""
+          - "&eClick to browse recipes!"
+      # Revive list button
+      15:
+        material: "AMETHYST_SHARD"
+        display-name: "&d&lRevive Lost Souls"
+        lore:
+          - "&7Spend a Resurrection Crystal"
+          - "&7to revive an eliminated ally."
+          - ""
+          - "&eClick to open revive menu!"
+
+  admin-menu:
+    title: "&#ff0000&lHeartss Admin Console"
+    size: 36
+    slots:
+      # Set hearts action
+      10:
+        material: "REDSTONE"
+        display-name: "&e&lManage Health"
+        lore:
+          - "&7Modify online player hearts."
+          - ""
+          - "&eClick to manage players!"
+      # Max health override action
+      12:
+        material: "ANVIL"
+        display-name: "&c&lMax Cap Override"
+        lore:
+          - "&7Hard override a player's max health"
+          - "&7independent of global caps."
+          - ""
+          - "&eClick to override limits!"
+      # Give item action
+      14:
+        material: "CHEST"
+        display-name: "&a&lSpawn Custom Items"
+        lore:
+          - "&7Spawn Heart Tiers, Sacrificial"
+          - "&7Scrolls, or Revive Beacons."
+          - ""
+          - "&eClick to open item spawner!"
+      # System Info
+      16:
+        material: "COMPASS"
+        display-name: "&b&lCore Diagnostics"
+        lore:
+          - "&7Examine active anti-exploit flags,"
+          - "&7storage queues, and linked IP alts."
+          - ""
+          - "&eClick to run investigation check!"
+
+  revive-menu:
+    title: "&d&lResurrection Chamber"
+    size: 54
+    # Displays eliminated player heads dynamically in slots 10-44.
+    # Rest of slots are decorated with panels.
+    decorations:
+      border:
+        material: "GRAY_STAINED_GLASS_PANE"
+        display-name: " "
+        slots: [0,1,2,3,4,5,6,7,8,9,17,18,26,27,35,36,44,45,46,47,48,49,50,51,52,53]
