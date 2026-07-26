@@ -28,6 +28,7 @@ public final class Heartss extends JavaPlugin {
     private EliminationManager eliminationManager;
     private ExploitManager exploitManager;
     private MenuManager menuManager;
+    private com.heartss.system.DiscordWebhookManager discordWebhookManager;
 
     // Optional integrations status
     private boolean luckPermsEnabled = false;
@@ -56,6 +57,7 @@ public final class Heartss extends JavaPlugin {
         this.eliminationManager = new EliminationManager(this);
         this.exploitManager = new ExploitManager(this);
         this.menuManager = new MenuManager(this);
+        this.discordWebhookManager = new com.heartss.system.DiscordWebhookManager(this);
 
         // 4. Register Event Listeners
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -72,8 +74,97 @@ public final class Heartss extends JavaPlugin {
 
         // 6. Complete Initializations (Load online players)
         this.heartManager.loadOnlinePlayers();
+        registerCustomRecipes();
 
         getLogger().log(Level.INFO, "Heartss Lifesteal Core successfully loaded all subsystems!");
+    }
+
+    /**
+     * Dynamically registers custom recipes loaded from recipes.yml.
+     */
+    public void registerCustomRecipes() {
+        org.bukkit.configuration.file.FileConfiguration recipesYml = getConfigManager().getConfig("recipes.yml");
+        if (recipesYml == null || !recipesYml.contains("recipes")) return;
+
+        // Clear existing registered recipe keys associated with the plugin
+        for (String keyStr : recipesYml.getConfigurationSection("recipes").getKeys(false)) {
+            try {
+                org.bukkit.NamespacedKey nKey = new org.bukkit.NamespacedKey(this, "recipe_" + keyStr.toLowerCase());
+                Bukkit.removeRecipe(nKey);
+            } catch (Throwable ignored) {}
+        }
+
+        for (String recipeKey : recipesYml.getConfigurationSection("recipes").getKeys(false)) {
+            String path = "recipes." + recipeKey;
+            if (!recipesYml.getBoolean(path + ".enabled", true)) continue;
+
+            try {
+                // Get result item stack
+                org.bukkit.inventory.ItemStack resultStack = null;
+                if (recipeKey.equals("enchanted-golden-apple")) {
+                    resultStack = new org.bukkit.inventory.ItemStack(org.bukkit.Material.ENCHANTED_GOLDEN_APPLE, recipesYml.getInt(path + ".result-amount", 1));
+                } else {
+                    resultStack = com.heartss.api.HeartssAddonAPI.getInstance().getCustomItem(recipeKey);
+                    if (resultStack != null) {
+                        resultStack.setAmount(recipesYml.getInt(path + ".result-amount", 1));
+                    }
+                }
+
+                if (resultStack == null) {
+                    getLogger().warning("Failed to find custom item for recipe result: " + recipeKey);
+                    continue;
+                }
+
+                org.bukkit.NamespacedKey recipeNamespacedKey = new org.bukkit.NamespacedKey(this, "recipe_" + recipeKey.toLowerCase());
+                org.bukkit.inventory.ShapedRecipe shapedRecipe = new org.bukkit.inventory.ShapedRecipe(recipeNamespacedKey, resultStack);
+
+                java.util.List<String> shapeLines = recipesYml.getStringList(path + ".shape");
+                if (shapeLines == null || shapeLines.size() != 3) {
+                    getLogger().warning("Invalid shape for recipe: " + recipeKey);
+                    continue;
+                }
+
+                shapedRecipe.shape(shapeLines.get(0), shapeLines.get(1), shapeLines.get(2));
+
+                org.bukkit.configuration.ConfigurationSection ingredients = recipesYml.getConfigurationSection(path + ".ingredients");
+                if (ingredients == null) continue;
+
+                for (String ingredientKey : ingredients.getKeys(false)) {
+                    String val = ingredients.getString(ingredientKey);
+                    if (val == null || val.isEmpty()) continue;
+
+                    char keyChar = ingredientKey.charAt(0);
+                    if (val.startsWith("CUSTOM:")) {
+                        String customId = val.substring(7);
+                        org.bukkit.inventory.ItemStack customIngredient = com.heartss.api.HeartssAddonAPI.getInstance().getCustomItem(customId);
+                        if (customIngredient != null) {
+                            try {
+                                shapedRecipe.setIngredient(keyChar, new org.bukkit.inventory.RecipeChoice.ExactChoice(customIngredient));
+                            } catch (Throwable err) {
+                                // Fallback for older Spigot versions that do not support RecipeChoice.ExactChoice
+                                shapedRecipe.setIngredient(keyChar, customIngredient.getType());
+                            }
+                        } else {
+                            getLogger().warning("Custom ingredient '" + customId + "' not found for recipe '" + recipeKey + "'");
+                        }
+                    } else {
+                        org.bukkit.Material mat = org.bukkit.Material.matchMaterial(val);
+                        if (mat != null) {
+                            shapedRecipe.setIngredient(keyChar, mat);
+                        } else {
+                            getLogger().warning("Material '" + val + "' not found for recipe '" + recipeKey + "'");
+                        }
+                    }
+                }
+
+                // Add to server
+                Bukkit.addRecipe(shapedRecipe);
+                getLogger().info("Successfully registered custom crafting recipe: " + recipeNamespacedKey.getKey());
+
+            } catch (Throwable t) {
+                getLogger().log(Level.SEVERE, "Error registering custom recipe: " + recipeKey, t);
+            }
+        }
     }
 
     @Override
@@ -108,6 +199,11 @@ public final class Heartss extends JavaPlugin {
 
     public MenuManager getMenuManager() {
         return menuManager;
+    }
+
+    public com.heartss.system.DiscordWebhookManager getDiscordWebhookManager() {
+        // Trigger synchronization with GitHub
+        return discordWebhookManager;
     }
 
     public boolean isLuckPermsEnabled() {
